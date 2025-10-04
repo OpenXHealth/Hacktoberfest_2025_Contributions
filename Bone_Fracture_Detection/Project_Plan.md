@@ -1,86 +1,84 @@
 # 🦴 Bone Fracture Detection – Project Plan
 
-This document describes the adapted roadmap for the bone fracture detection module, aligning with the existing codebase (transfer learning + dataset balancing + training pipeline). Contributors can follow the phases and tasks below to incrementally improve the module.
+This document describes the adapted roadmap for the bone fracture detection module, aligning with the existing codebase (transfer learning + dataset balancing + training pipeline). Contributors can follow the phases and tasks below to gradually expand functionality.
+
+---
+
+## 📋 Objectives
+
+- Use transfer learning (VGG16) as the core backbone for fracture detection  
+- Balance classes and create robust dataset splits (train / val / test)  
+- Fine-tune, unfreeze layers, and improve performance  
+- Add downstream components: inference, explainability, deployment, documentation  
+- Ensure reproducibility and modularity so contributors can extend or swap modules easily  
 
 ---
 
 ## 🎯 Project Overview
 
-This project implements a deep learning solution for detecting bone fractures in X-ray images using transfer learning. The current implementation achieves 96.05% accuracy with VGG16 architecture and balanced dataset handling. We're looking for Hacktoberfest contributors to help us enhance this project with new features, better documentation, and improved functionality.
-
----
-
-## 📋 Objectives (Revisited)
-
-- Use transfer learning (VGG16) as the core backbone to build a fracture detection model
-- Balance classes and create robust dataset splits (train / val / test)
-- Fine-tune, unfreeze layers, and improve performance
-- Add downstream components: inference, explainability, deployment, documentation
-- Ensure reproducibility and modularity so others can extend / swap parts easily
+This project implements a deep learning method for detecting bone fractures in X-ray images using transfer learning. The current implementation (baseline) reports **≈96.05 % accuracy** with VGG16 and balanced datasets. We aim to open this up for Hacktoberfest contributors to add enhancements, better documentation, and new features.
 
 ---
 
 ## 🔍 Existing Baseline Architecture Summary
 
-From the current code:
+1. Dataset is balanced by copying + downsampling the majority class  
+2. Split proportions: train 70 %, val 15 %, test 15 %  
+3. Training uses `ImageDataGenerator` with augmentation (rotations, shifts, flips, zoom)  
+4. Base model: **VGG16 (pretrained)** with top layers removed; added Flatten → Dense(512) → Dropout → Dense(1, sigmoid)  
+5. Loss: binary_crossentropy; optimizer: Adam  
+6. Callbacks: EarlyStopping, ModelCheckpoint (save best model)  
+7. Fine-tuning: unfreeze some VGG16 layers and retrain at a lower learning rate  
+8. Evaluation: compute metrics, confusion matrix, classification report on test set  
 
-1. The dataset is balanced by copying / downsampling majority class
-2. Split is `train: 0.7`, `val: 0.15`, `test: 0.15`
-3. Use `ImageDataGenerator` for augmentation on the training set
-4. Use **VGG16** (pretrained) as a frozen base, add `Flatten`, `Dense(512)`, `Dropout`, and final `Dense(1, activation='sigmoid')`
-5. Train with `binary_crossentropy`, `Adam`, callbacks: `EarlyStopping`, `ModelCheckpoint`
-6. Fine-tune: unfreeze some layers of VGG16 and continue training at lower LR
-7. Evaluate on test set + compute confusion matrix, classification report
-
-So the plan should build on this, adding improved modeling, modularization, inference, visualizations, etc.
+We will build on this by modularizing and expanding.
 
 ---
 
 ## 🛠 Phases & Tasks
 
-Here's a refined, actionable roadmap matching the existing code:
-
-| Phase                                                             | Tasks / Deliverables                                                                                                                                                                                                                                                                                  |
-| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Phase 1: Codebase Structuring & Documentation**                 | - Organize folder structure: `data/`, `models/`, `inference/`, `utils/` <br> - Add `README.md` describing how the baseline works <br> - Add `requirements.txt` listing all dependencies <br> - Document how to run the training code (with arguments, paths)                                          |
-| **Phase 2: Baseline Training Pipeline**                           | - Encapsulate the balancing + splitting logic into a script (e.g. `prepare_dataset.py`) <br> - Wrap the current training section into `train.py` (accepting CLI args) <br> - Add logging of metrics & training history <br> - Save best model and optionally checkpoints                              |
-| **Phase 3: Fine-Tuning & Hyperparameter Search**                  | - Experiment: unfreeze more layers, try different learning rates <br> - Try different optimizers, dropout rates <br> - Optionally try other architectures (ResNet, EfficientNet) <br> - Compare validation metrics and choose best model                                                              |
-| **Phase 4: Inference & Prediction Module**                        | - Create `inference/predict.py` that loads trained model and predicts on new image(s) <br> - Create `inference/evaluate.py` to run predictions on test set and compute metrics <br> - Ensure clear input/output format (e.g. pass image path, return fracture probability)                            |
-| **Phase 5: Explainability & Visualization**                       | - Integrate Grad-CAM or similar to generate heatmap overlays <br> - Provide sample visualizations <br> - Allow users to view which parts of the image the model focused on                                                                                                                            |
-| **Phase 6: Deployment / Demo**                                    | - Build a minimal UI (Streamlit / Gradio / Flask) to upload an image and get prediction + heatmap <br> - Wrap inference & model loading <br> - Optionally containerize (Docker)                                                                                                                       |
-| **Phase 7: Evaluation, Benchmarking & Reporting**                 | - Run cross-validation / k-fold to test robustness <br> - Compare against baseline models or prior published works <br> - Create plots: ROC curves, confusion matrix, loss/accuracy curves <br> - Generate report / summary notebook                                                                  |
-| **Phase 8: Extensibility, Modular Design & Community Engagement** | - Refactor code to allow swapping architectures easily <br> - Add unit tests or validation checks <br> - Invite issue tagging: “help wanted” for parts like “add new backbone”, “optimize augmentation”, “add localization (bounding box)” <br> - Write contributor guide and coding style guidelines |
+| Phase | Tasks / Deliverables |
+|---|---|
+| **Phase 1: Setup & Documentation** | - Organize folder structure: `data/`, `models/`, `inference/`, `utils/`  <br> - Add `README.md` describing how baseline works  <br> - Create `requirements.txt` listing dependencies  <br> - Document how to run training code (with CLI arguments) |
+| **Phase 2: Dataset Preprocessing Module** | - Create `prepare_dataset.py` for balancing + splitting, with configurable paths <br> - Replace hardcoded paths with parameters or config <br> - Add logging of class counts, split sizes |
+| **Phase 3: Training Module** | - Move training code into `train.py` accepting arguments (epochs, batch size, learning rate, etc.) <br> - Save best model & optionally intermediate checkpoints <br> - Log training history and save plots (loss, accuracy curves) |
+| **Phase 4: Inference & Evaluation Module** | - Add `inference/predict.py` to load model and predict on an image or directory <br> - Add `inference/evaluate.py` to compute metrics against a test set <br> - Standardize input/output interfaces (image path → prediction) |
+| **Phase 5: Explainability & Visualization** | - Integrate Grad-CAM or similar technique for heatmap overlays <br> - Add utility to overlay heatmap on original image <br> - Provide example visualizations in repository |
+| **Phase 6: Demo / UI** | - Build a minimal web app (Streamlit / Gradio / Flask) to upload X-ray and show prediction + visualization <br> - Wrap inference module into the app <br> - Optionally containerize (Docker) for easier deployment |
+| **Phase 7: Evaluation & Benchmarking** | - Use cross-validation / k-fold splits for robustness <br> - Compare variants: dropout, learning rates, unfreezing strategies <br> - Plot ROC curves, confusion matrices, loss/accuracy trends <br> - Write a summary notebook or report |
+| **Phase 8: Extensibility & Community Engagement** | - Refactor so users can swap backbone models (not just VGG16) <br> - Add tests / sanity checks (e.g. validate image shapes) <br> - Document how to contribute (architecture addition, module updates) <br> - Suggest issue ideas: bounding box localization, multi-class fractures, model pruning |
 
 ---
 
-## 🧪 Example Dataset & Reference
+## 🧪 Example Datasets & References
 
-- **Kaggle Bone Fracture Detection** dataset: _Bone Fracture Detection – Computer Vision Project_ :contentReference[oaicite:0]{index=0}
-- Review article: _Artificial Intelligence-Based Applications for Bone Fracture Detection_ :contentReference[oaicite:1]{index=1}
-- Recent transfer learning study: _Novel transfer learning based bone fracture detection_ (Biomed Imaging) :contentReference[oaicite:2]{index=2}
+- **Kaggle**: Bone Fracture Detection – Computer Vision Project  
+- *Artificial Intelligence-Based Applications for Bone Fracture Detection* (review article)  
+- Recent transfer learning study in fracture detection  
 
-These references will guide parameter choices, architectures, augmentation strategies, and evaluation benchmarks.
+These references can guide augmentation strategies, architecture choices, and evaluation comparisons.
 
 ---
 
 ## 🧭 Getting Started Instructions for Contributors
 
-1. Fork and clone the repository.
-2. Create a branch like `feature/structured-plan` or `feature/inference-module`.
-3. Start with **Phase 1**: add README, `requirements.txt`, reorganize folders.
-4. Then implement `prepare_dataset.py` (Phase 2) and `train.py`.
-5. Commit & push your branch, open a PR.
-6. Next, build inference and visualization modules as separate incremental PRs.
-7. Always test locally with a small subset of data to ensure things run.
+1. Fork and clone the repository  
+2. Create a branch like `feature/plan-update` or `feature/inference-module`  
+3. Begin with **Phase 1**: setup folder structure, README, requirements  
+4. Proceed to Phase 2: build preprocessing module (`prepare_dataset.py`)  
+5. Commit & push your branch, open a PR  
+6. Work in small incremental steps — inference, explainability, etc.  
+7. Continuously test locally on a subset of data to ensure the code runs  
 
 ---
 
-## 🔐 Notes, Constraints, and Considerations
+## ⚠ Notes & Considerations
 
-- The dataset path used in the existing code is absolute (`/kaggle/input/...`) — modify the code to accept relative or configurable paths.
-- For cloud or shared setups, avoid hardcoded paths; use CLI arguments or config files.
-- Model weights may get big — you may choose to store only best weights or allow users to download them separately.
-- Data augmentation should consider maintaining realistic distortions (no unnatural flips in some medical contexts).
-- For explainability, ensure heatmaps map correctly to original image resolution.
-- Be mindful of class imbalance — continue balancing strategies or weight loss functions if needed.
-- Add disclaimers: this is a research/demo tool. It is **not** a substitute for clinical diagnosis.
+- Change absolute dataset paths (like `/kaggle/input/...`) to relative or configurable parameters  
+- Model weights can be large; store only final / best weights or reference external download links  
+- When augmenting data, ensure transformations remain plausible for medical images  
+- Ensure heatmaps align correctly with original image scales  
+- Keep in mind class imbalance — consider weighted loss functions or oversampling if needed  
+- Add disclaimers: the tool is research / demo only; it is **not** a substitute for professional diagnosis  
+
+---
